@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>运单查询</title>
+    <meta th:include="common :: head" />
+    <link th:href="@{/sweetalert/sweetalert.css}" rel="stylesheet"/>
+    <script th:src="@{/sweetalert/sweetalert.min.js}"></script>
+    <script th:src="@{/js/jqpaginator.min.js}"></script>
+</head>
+<body>
+<nav class="navbar navbar-default" th:include="common :: nav"></nav>
+<div style="width:600px;margin-left:0px;text-align:left;margin: auto;">
+    <form id="trackingmoreId" role="form" action="//track.trackingmore.com" method="get" onsubmit="return false">
+        <div class="search-box">
+            <div class="input-box">
+                <input id="button_express_code" type="hidden" value="" name="button_express_code"/><input
+                    style="display:inline; border-color: #fb6e50" type="text" autocomplete="off" maxlength="26"
+                    placeholder="请输入快递单号" id="button_tracking_number" class="inp-metro" name="button_tracking_number"/>
+                <button style="background-color: #fb6e50" class="button-query" type="submit" onclick="return doTrack()"
+                        id="query">查询
+                </button>
+            </div>
+        </div>
+        <input type="hidden" name="lang" value="cn"/>
+    </form>
+    <div id="TRNum"></div>
+</div>
+<div class="content">
+    <div style="padding: 10px 0;">
+        <input style="display: inline;width: 200px;" id="excel-file" type="file" value="上传Excel" />
+        <input style="display: inline;width: 100px;" onclick="uploadFile();" value="上传Excel" class="btn btn-info"/>
+        <input style="display: inline;width: 100px;" onclick="getKuaiDis(1);" value="刷新" class="btn btn-info btm-online"/>
+    </div>
+    <table class="table table-hover table-bordered">
+        <thead>
+        <tr class="data-tr">
+            <th style="border-bottom: 0;">运单号</th>
+            <th style="border-bottom: 0;">快递公司</th>
+            <th style="border-bottom: 0;">公司代码</th>
+            <th style="border-bottom: 0;">时间间隔(小时)</th>
+            <th style="border-bottom: 0;">分类</th>
+            <th style="border-bottom: 0;">包裹状态</th>
+            <th style="border-bottom: 0;">添加时间</th>
+            <th style="border-bottom: 0;">操作</th>
+        </tr>
+        </thead>
+        <tbody id="kd">
+        </tbody>
+    </table>
+    <div>
+        <div id="page-info" style="float: left; height: 33.6px"></div>
+        <div style="float:right;"><ul id="pagination" class="pagination" style="margin: 0;"></ul></div>
+    </div>
+</div>
+<script type="text/javascript" src="//cdn.trackingmore.com/plugins/v1/pluginsCss.js?time=20170913"></script>
+<script type="text/javascript" src="//cdn.trackingmore.com/plugins/v1/plugins.min.js"></script>
+<script th:inline="javascript">
+    $(function () {
+        getKuaiDis(1);
+    });
+
+    function uploadExcel() {
+        var formData = new FormData(); // FormData 对象
+        formData.append("excel", document.getElementById("excel-file").files[0]); // 文件对象
+        var url = [[@{/order/file}]];
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: formData,
+            dataType: 'json',
+            /**
+             *必须false才会自动加上正确的Content-Type
+             */
+            contentType: false,
+            /**
+             * 必须false才会避开jQuery对 formdata 的默认处理
+             * XMLHttpRequest会对 formdata 进行正确的处理
+             */
+            processData: false,
+            success: function (data) {
+                if (data === true) {
+                    swal("xcel上传成功！");
+                    getKuaiDis(1);
+                    $("#excel-file").val("");
+                    return;
+                }
+                swal("xcel上传失败！");
+            },
+            error: function () {
+                swal("Excel上传失败！");
+            }
+        });
+
+    }
+
+    function uploadFile() {
+        if($("#excel-file").val() === ""){
+            swal("请选择excel文件！");
+            return;
+        }
+
+        swal({
+            title: "Ajax request example",
+            text: "Submit to run ajax request",
+            type: "info",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true
+        }, function () {
+            uploadExcel();
+        });
+    }
+
+    function getKuaiDis(pageNo) {
+        $("#kd").html('<tr><td style="text-align: center;" colspan="8">数据加载中，请稍候...</td></tr>');
+        var pageSize = $("#pageSize").val();
+        if (!pageSize) {
+            pageSize = 10;
+        }
+        var url = [[@{/order/get}]];
+        $.ajax({
+            type: "GET",
+            url: url,
+            data: {
+                pageNo: pageNo,
+                pageSize:pageSize
+            },
+            dataType: "json",
+            success: function (data) {
+                var html = "";
+                $.each(data.kuaiDiList, function (i, kuaiDi) {
+                    var kdHtml = "";
+                    html += '<tr>';
+                    html += '<td>' + kuaiDi.no + '</td>';
+                    html += '<td>' + kuaiDi.name + '</td>';
+                    html += '<td>' + kuaiDi.code + '</td>';
+                    html += '<td>' + kuaiDi.intervalHour + '</td>';
+                    html += '<td>' + (kuaiDi.classify === 1 ? '正常' : '可能不正常') + '</td>';
+                    var state = kuaiDi.state;
+                    if (state === 3) {
+                        state = '<span class="label label-success">成功签收</span>';
+                    } else if (state === 2){
+                        state = '<span class="label label-default">运输途中</span>';
+                    } else if (state === 4){
+                        state = '<span class="label label-warning">问题件</span>';
+                    } else {
+                        state = '<span class="label label-info">没有信息</span>';
+                    }
+                    html += '<td>' + state + '</td>';
+                    if (kuaiDi.state !== 0) {
+                        var jsonData = JSON.parse(kuaiDi.data);
+                        $.each(jsonData, function (i, json) {
+                            kdHtml += '<p>' + json.AcceptTime.substr(0, 16) + ',' + json.AcceptStation + '</p>';
+                        });
+                    }
+                    html += '<td>' + kuaiDi.date + '</td>';
+                    html += '<td><a href="javascript:;" onclick="kdDetail(' + i +')">查看详情</a></td>';
+                    html += '</tr>';
+                    html += '<tr id="tr' + i + '" style="display: none;background-color: #eee;"><td colspan="8">' + kdHtml + '</td></tr>'
+                });
+                $("#kd").html(html);
+                //分页
+                $('#pagination').jqPaginator({
+                    pageSize: pageSize,
+                    totalCounts: data.totalCounts,
+                    currentPage: pageNo,
+                    visiblePages: 5,
+                    first: '<li class="first"><a href="javascript:;">首页</a></li>',
+                    prev: '<li class="prev"><a href="javascript:;">上一页</a></li>',
+                    next: '<li class="next"><a href="javascript:;">下一页</a></li>',
+                    last: '<li class="last"><a href="javascript:;">尾页</a></li>',
+                    page: '<li class="page"><a href="javascript:;">{{page}}</a></li>',
+                    onPageChange: function (page, type) {
+                        $('#page-info').html('每页&nbsp;<select onchange="getKuaiDis(1)" id="pageSize" style="width: 40px;height: 25px;display: inline;"><option selected="selected" value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select>&nbsp;条，当前第' + page + '/' + this.totalPages + '页,共' + this.totalCounts + '条记录');
+                        if (type !== "init") {
+                            getKuaiDis(page);
+                        }
+                    }
+                });
+            },
+            error: function () {
+            
+            }
+        });
+    }
+
+    function kdDetail(data) {
+        var display = $("#tr" + data).css("display");
+        if (display === "none") {
+            $("#tr" + data).show();
+        } else {
+            $("#tr" + data).hide();
+        }
+    }
+
+    function doTrack() {
+        var num = document.getElementById("button_tracking_number").value;
+        var expCode = document.getElementById("button_express_code").value;
+        var width = document.getElementById("query").parentNode.offsetWidth;
+        TRACKINGMORE.trackMynumber({
+            TR_ElementId: "TRNum",      //必须，指定悬浮位置的元素ID。
+            TR_Width: width,       //可选，指定查询结果宽度，最小宽度为600px，默认撑满容器。
+            TR_Height: 600,       //可选，指定查询结果高度，最大高度为800px，默认撑满容器。
+            TR_ExpressCode: expCode,       //可选，指定运输商，默认为自动识别。
+            TR_Lang: "cn",       //可选，指定UI语言，默认根据浏览器自动识别。
+            TR_Num: num       //必须，指定要查询的单号。
+        });
+        return false;
+    }
+</script>
+</body>
+</html>
+    

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>不木科技-爬虫数据分析</title>
+    <meta th:include="common :: head" />
+    <link rel="stylesheet" th:href="@{/daterangepicker/daterangepicker-bs3.css}" />
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css"/>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
+    <!-- Latest compiled and minified Locales -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/locale/bootstrap-table-zh-CN.min.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-default" th:include="common :: nav"></nav>
+<div class="content">
+    <div>
+        <table id="table" data-show-export="true"></table>
+    </div>
+</div>
+<script th:src="@{/daterangepicker/moment.js}"></script>
+<script th:src="@{/daterangepicker/daterangepicker.js}"></script>
+<script th:inline="javascript">
+    var url = [[@{/products}]];
+    $('#table').bootstrapTable({
+        url: url,
+        queryParams: function(params) {
+            params.time=$("#times").val();
+            params.tableName="mamba_product_new";
+	        return params;
+        },
+        columns: [{
+            field: 'time',
+            title: '爬取时间',
+            width: '10%'
+        }, {
+            field: 'pid',
+            title: '商品id'
+        }, {
+            field: 'price',
+            title: '价格',
+            width: '8%'
+        }, {
+            field: 'originalPrice',
+            title: '原价',
+            width: '8%'
+        }, {
+            field: 'salesCount',
+            title: '总销量',
+            sortable: true
+        }, {
+            field: 'score',
+            title: '评分',
+            sortable: true
+        }, {
+            field: 'commentsCount',
+            title: '评价数',
+            sortable: true
+        }, {
+            field: 'shopName',
+            title: '店铺名称'
+        }, {
+            field: 'productUrl',
+            title: '商品链接',
+            formatter: function (value, row, index) {
+                return '<a href="' + value + '" target="_blank"  >点击进入</a>';
+            }
+        }, {
+            field: 'shopUrl',
+            title: '店铺链接',
+            formatter: function (value, row, index) {
+                return '<a href="' + value + '" target="_blank">点击进入</a>';
+            }
+        }],
+        cache: false,
+        showColumns: true,
+        showRefresh: true,
+        showDataExport: true,
+        showToggle: true,
+
+        /* 搜索 */
+        search: true,
+        trimOnSearch: false,
+        /* 分页 */
+        pagination: true,
+        paginationLoop: false,
+        sidePagination: "server",
+        pageNumber:1,
+        pageSize: 10,
+        paginationPreText: "上一页",
+        paginationNextText: "下一页",
+        showPaginationSwitch: true
+    });
+    
+    $(".fixed-table-toolbar").append('<div class="pull-right search"><input type="text" style="width: 300px" id="times" placeholder="时间选择" class="form-control" /></div>');
+    $('#times').daterangepicker({
+        timePicker: true,
+        timePicker12Hour: false,
+        timePickerIncrement: 1,
+        format: 'YYYY-MM-DD HH:mm'
+    }, function(start, end, label) {
+        console.log(start.toISOString(), end.toISOString(), label);
+    });
+</script>
+</body>
+</html>
+    

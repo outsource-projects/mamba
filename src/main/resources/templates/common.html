@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+    <script th:src="@{/js/jquery.js}"></script>
+    <script th:src="@{/js/bootstrap.min.js}"></script>
+    <style>
+        body {
+            color: #505050;
+            font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", "Hiragino Sans GB W3", "WenQuanYi Micro Hei", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px 0 rgba(0,0,0,.05);
+            background-color: white;
+        }
+
+        .logo {
+            height: 35px;
+            vertical-align: top;
+        }
+
+        .content {
+            margin: auto;
+            width: 85%;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-default" th:fragment="nav">
+    <div class="container-fluid" style="margin-left: 6%;">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">
+                <span><img class="logo" src="/img/logo.png" alt=""/>&nbsp;不木科技</span>
+            </a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1" style="margin-right: 6%;">
+
+            <ul class="nav navbar-nav navbar-left">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">商品<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a th:href="@{/pageView(pageId=1)}">基础数据</a></li>
+                        <li><a th:href="@{/pageView(pageId=6)}">新品</a></li>
+                        <li><a th:href="@{/pageView(pageId=2)}">数据分析</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">商店分析<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a th:href="@{/pageView(pageId=4)}">自家店铺</a></li>
+                        <li><a th:href="@{/pageView(pageId=5)}">其他店铺</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a th:href="@{/order}">运单查询</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a th:href="@{/logout}" class="dropdown-toggle">退出</a>
+                </li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div>
+    <!-- Collect the nav links, forms, and other content for toggling -->
+</nav>
+</body>
+</html>
+    

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>不木科技-爬虫数据分析</title>
+    <meta th:include="common :: head" />
+    <link rel="stylesheet" th:href="@{/daterangepicker/daterangepicker-bs3.css}" />
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css"/>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
+    <!-- Latest compiled and minified Locales -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/locale/bootstrap-table-zh-CN.min.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-default" th:include="common :: nav"></nav>
+<div class="content">
+    <div>
+        <table id="table" data-show-export="true"></table>
+    </div>
+</div>
+
+<script th:src="@{/daterangepicker/moment.js}"></script>
+<script th:src="@{/daterangepicker/daterangepicker.js}"></script>
+<script th:inline="javascript">
+    var url = [[@{/shops}]];
+    $('#table').bootstrapTable({
+        url: url,
+        queryParams: function(params) {
+            params.shopType = "other";
+            params.time=$("#times").val();
+            if (params.time == null || params.time == "") {
+                params.time = moment().subtract(6, 'days').format('YYYY-MM-DD HH:mm') + " - " + moment().format('YYYY-MM-DD HH:mm');
+            }
+            return params;
+        },
+        responseHandler:function(res) {
+            var totalSales = 0;
+            $.each(res.rows, function (i, shop) {
+                totalSales += shop.TOTALSALES;
+            });
+            $("#totalSales").remove();
+            $(".fixed-table-toolbar").append('<div id="totalSales" class="pull-left search">总销售额' + totalSales.toFixed(2) + '</div>');
+            return res;
+        },
+        columns: [{
+            field: 'TIME',
+            title: '时间'
+        }, {
+            field: 'SHOP_NAME',
+            title: '店铺名称'
+        }, {
+            field: 'AVGSALESCOUNT',
+            title: '平均销量',
+            formatter: function (value, row, index) {
+                return  value == null ? null : value.toFixed(2);
+            }
+        },{
+            field: 'AVGSALES',
+            title: '平均销售额',
+            formatter: function (value, row, index) {
+                return  value == null ? null : value.toFixed(2);
+            }
+        },{
+            field: 'AVGCOLLECTIONCOUNT',
+            title: '平均收藏量',
+            formatter: function (value, row, index) {
+                return  value == null ? null : value.toFixed(2);
+            }
+        }, {
+            field: 'TOTALSALESCOUNT',
+            title: '总销量',
+            sortable: true,
+            formatter: function (value, row, index) {
+                return  value == null ? null : value.toFixed(2);
+            }
+        }, {
+            field: 'TOTALSALES',
+            title: '总销售额',
+            sortable: true,
+            formatter: function (value, row, index) {
+                return  value == null ? null : value.toFixed(2);
+            }
+        }, {
+            field: 'TOTALCOLLECTIONCOUNT',
+            title: '总收藏量',
+            sortable: true,
+            formatter: function (value, row, index) {
+                return  value == null ? null : value.toFixed(2);
+            }
+        },{
+            field: 'SHOP_URL',
+            title: '店铺链接',
+            formatter: function (value, row, index) {
+                return '<a href="' + value + '" target="_blank">点击进入</a>';
+            }
+        }],
+        cache: false,
+        showColumns: true,
+        showRefresh: true,
+        showDataExport: true,
+        showToggle: true,
+
+        /* 搜索 */
+        search: true,
+        trimOnSearch: false,
+        /* 分页 */
+        pagination: true,
+        paginationLoop: false,
+        sidePagination: "server",
+        pageNumber:1,
+        pageSize: 10,
+        paginationPreText: "上一页",
+        paginationNextText: "下一页",
+        showPaginationSwitch: true
+    });
+
+    $(".fixed-table-toolbar").append('<div class="pull-right search"><input type="text" style="width: 300px" id="times" placeholder="时间选择" class="form-control" /></div>');
+    $('#times').daterangepicker({
+        timePicker: true,
+        timePicker12Hour: false,
+        timePickerIncrement: 1,
+        format: 'YYYY-MM-DD HH:mm'
+    }, function(start, end, label) {
+        console.log(start.toISOString(), end.toISOString(), label);
+    });
+    $("#times").val(moment().subtract(6, 'days').format('YYYY-MM-DD HH:mm') + " - " + moment().format('YYYY-MM-DD HH:mm'));
+</script>
+</body>
+</html>
